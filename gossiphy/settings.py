@@ -7,13 +7,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security
 # Read sensitive settings from environment for production safety
 SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key-here')
-# Default to True for local development; set ENV var DEBUG=False on the server
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '')
-if ALLOWED_HOSTS:
-    ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS.split(',') if h.strip()]
-else:
-    ALLOWED_HOSTS = []
+# Set to False in production
+DEBUG = False
+# Allow the PythonAnywhere domain
+ALLOWED_HOSTS = ['nikhilgudu2.pythonanywhere.com', 'localhost', '127.0.0.1']
 
 # Application definition
 INSTALLED_APPS = [
