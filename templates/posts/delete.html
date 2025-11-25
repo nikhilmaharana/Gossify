@@ -1,0 +1,92 @@
+<!-- templates/posts/delete.html -->
+{% extends 'base.html' %}
+
+{% block title %}Delete Post - Gossiphy{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-red-500 to-pink-600 px-6 py-4">
+            <h1 class="text-2xl font-bold text-white flex items-center">
+                <i class="fas fa-exclamation-triangle mr-3"></i>
+                Delete Post
+            </h1>
+            <p class="text-red-100 mt-1">This action cannot be undone</p>
+        </div>
+
+        <!-- Post Preview -->
+        <div class="p-6">
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                <h3 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                    <i class="fas fa-eye mr-1 text-gray-400"></i>
+                    Post to be deleted
+                </h3>
+                
+                <div class="bg-white rounded-lg p-4 border border-gray-200">
+                    <div class="flex items-center mb-3">
+                        <div class="w-8 h-8 bg-gradient-to-r from-red-500 to-pink-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                            {{ post.author.username|first|upper }}
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-semibold text-gray-900">{{ post.author.username }}</p>
+                            <p class="text-xs text-gray-500">{{ post.created_at|timesince }} ago</p>
+                        </div>
+                    </div>
+                    
+                    {% if post.caption %}
+                        <p class="text-gray-800 mb-3">{{ post.caption }}</p>
+                    {% endif %}
+                    
+                    <div class="grid gap-2">
+                        {% if post.image %}
+                            <img src="{{ post.image.url }}" alt="Post image" class="w-full h-48 object-cover rounded">
+                        {% endif %}
+                        
+                        {% if post.video %}
+                            <video class="w-full h-48 object-cover rounded" muted>
+                                <source src="{{ post.video.url }}" type="video/mp4">
+                            </video>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Warning Message -->
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-red-400 text-xl"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">
+                            Warning: This action is permanent
+                        </h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>This post will be permanently deleted</li>
+                                <li>All associated media files will be removed</li>
+                                <li>This action cannot be undone</li>
+                                <li>The post will no longer be visible to anyone</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confirmation Form -->
+            <form method="post">
+                {% csrf_token %}
+                <div class="flex flex-col sm:flex-row sm:justify-between space-y-3 sm:space-y-0 sm:space-x-4">
+                    <a href="{% url 'user_posts' %}" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white text-center py-3 px-6 rounded-lg font-medium transition duration-150 ease-in-out">
+                        <i class="fas fa-arrow-left mr-2"></i>Keep Post
+                    </a>
+                    <button type="submit" class="flex-1 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white py-3 px-6 rounded-lg font-medium transition duration-150 ease-in-out">
+                        <i class="fas fa-trash mr-2"></i>Delete Forever
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

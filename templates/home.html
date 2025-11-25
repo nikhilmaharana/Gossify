@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Main Feed -->
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h1 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-newspaper mr-2 text-blue-600"></i>
+                Latest Posts
+            </h1>
+            
+            {% if not user.is_authenticated %}
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <p class="text-blue-800">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        <a href="{% url 'signup' %}" class="font-medium hover:underline">Sign up</a> or 
+                        <a href="{% url 'login' %}" class="font-medium hover:underline">log in</a> 
+                        to create and share your own posts!
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Posts Loop -->
+        {% for post in posts %}
+            <div class="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
+                <!-- Post Header -->
+                <div class="p-4 border-b border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                            {{ post.author.username|first|upper }}
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-semibold text-gray-900">
+                                {% if post.anonymous %}
+                                    Anonymous
+                                {% else %}
+                                    {{ post.author.username }}
+                                {% endif %}
+                            </h3>
+                            <p class="text-xs text-gray-500">{{ post.created_at|timesince }} ago</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Post Media -->
+                {% if post.image %}
+                    <div class="relative">
+                        <img src="{{ post.image.url }}" alt="Post image" class="w-full max-h-96 object-cover">
+                    </div>
+                {% endif %}
+                
+                {% if post.video %}
+                    <div class="relative">
+                        <video controls class="w-full max-h-96">
+                            <source src="{{ post.video.url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                {% endif %}
+
+                <!-- Post Caption -->
+                {% if post.caption %}
+                    <div class="p-4">
+                        <p class="text-gray-800">{{ post.caption|linebreaks }}</p>
+                    </div>
+                {% endif %}
+
+                <!-- Actions -->
+                <div class="px-4 py-3 border-t border-gray-200 flex items-center space-x-6 text-sm">
+                    {% if user.is_authenticated %}
+                        <!-- Like Button -->
+                        <form action="{% url 'toggle_like' post.id %}" method="post" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="flex items-center space-x-1 text-red-500 hover:text-red-600">
+                                {% if post.liked_by_user %}
+                                    <i class="fas fa-heart"></i>
+                                {% else %}
+                                    <i class="far fa-heart"></i>
+                                {% endif %}
+                                <span>{{ post.total_likes }}</span>
+                            </button>
+                        </form>
+
+                        <!-- Comment Count Scroll -->
+                        <a href="#comments-{{ post.id }}" class="flex items-center space-x-1 text-blue-500 hover:text-blue-600">
+                            <i class="far fa-comment"></i>
+                            <span>{{ post.total_comments }}</span>
+                        </a>
+                    {% else %}
+                        <span class="flex items-center text-gray-400">
+                            <i class="far fa-heart mr-1"></i>{{ post.total_likes }}
+                        </span>
+                        <span class="flex items-center text-gray-400">
+                            <i class="far fa-comment mr-1"></i>{{ post.total_comments }}
+                        </span>
+                    {% endif %}
+
+                    <!-- Share Button -->
+                    <button type="button" class="flex items-center space-x-1 text-green-600 hover:text-green-700"
+                        onclick="navigator.clipboard.writeText('{{ request.build_absolute_uri }}posts/{{ post.id }}/'); alert('Post link copied!');">
+                        <i class="far fa-share-square"></i>
+                        <span>Share</span>
+                    </button>
+                </div>
+
+                <!-- Comments Section -->
+                <div class="p-4 border-t border-gray-100" id="comments-{{ post.id }}">
+                    {% for comment in post.comments.all %}
+                        <div class="mb-2">
+                            <p class="text-xs text-gray-500">
+                                <strong>{{ comment.user.username }}</strong> • {{ comment.created_at|timesince }} ago
+                            </p>
+                            <p class="text-sm">{{ comment.text }}</p>
+                        </div>
+                    {% empty %}
+                        <p class="text-gray-400 text-sm">No comments yet</p>
+                    {% endfor %}
+
+                    {% if user.is_authenticated %}
+                        <form action="{% url 'add_comment' post.id %}" method="post" class="mt-3">
+                            {% csrf_token %}
+                            {{ comment_form.text }}
+                            <button type="submit" class="mt-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded">
+                                Add Comment
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="bg-white rounded-lg shadow-md p-8 text-center">
+                <i class="fas fa-images text-4xl text-gray-300 mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No posts yet</h3>
+                <p class="text-gray-500">Be the first to share something amazing!</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'create_post' %}" class="mt-4 inline-block bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg">
+                        Create Post
+                    </a>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <!-- Pagination -->
+        {% if posts.has_other_pages %}
+            <div class="flex justify-center mt-8">
+                <nav class="flex space-x-2">
+                    {% if posts.has_previous %}
+                        <a href="?page=1" class="px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded">First</a>
+                        <a href="?page={{ posts.previous_page_number }}" class="px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded">Previous</a>
+                    {% endif %}
+                    <span class="px-3 py-2 text-sm text-gray-500">
+                        Page {{ posts.number }} of {{ posts.paginator.num_pages }}
+                    </span>
+                    {% if posts.has_next %}
+                        <a href="?page={{ posts.next_page_number }}" class="px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded">Next</a>
+                        <a href="?page={{ posts.paginator.num_pages }}" class="px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded">Last</a>
+                    {% endif %}
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Welcome to Gossiphy</h2>
+            <p class="text-gray-600 text-sm mb-4">
+                Share your moments, connect with friends, and discover amazing content from our community.
+            </p>
+            
+            {% if not user.is_authenticated %}
+                <div class="space-y-3">
+                    <a href="{% url 'signup' %}" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-center py-2 px-4 rounded-lg font-medium block">
+                        Join Gossiphy
+                    </a>
+                    <a href="{% url 'login' %}" class="w-full border border-blue-500 text-blue-500 hover:bg-blue-50 text-center py-2 px-4 rounded-lg font-medium block">
+                        Log In
+                    </a>
+                </div>
+            {% else %}
+                <div class="space-y-3">
+                    <a href="{% url 'create_post' %}" class="w-full bg-green-500 hover:bg-green-600 text-white text-center py-2 px-4 rounded-lg font-medium block">
+                        <i class="fas fa-plus mr-2"></i>Create Post
+                    </a>
+                    <a href="{% url 'user_posts' %}" class="w-full border border-green-500 text-green-500 hover:bg-green-50 text-center py-2 px-4 rounded-lg font-medium block">
+                        <i class="fas fa-user mr-2"></i>My Posts
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

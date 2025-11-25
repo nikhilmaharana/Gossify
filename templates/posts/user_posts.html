@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}My Posts - Gossiphy{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Profile Header -->
+    <div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg shadow-md p-6 mb-8 text-white">
+        <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
+            <div class="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-3xl font-bold">
+                {{ user.username|first|upper }}
+            </div>
+            <div class="text-center sm:text-left flex-1">
+                <h1 class="text-3xl font-bold">{{ user.username }}</h1>
+                <p class="text-purple-100 mt-1">{{ user.email }}</p>
+                <div class="flex items-center justify-center sm:justify-start space-x-6 mt-4">
+                    <div class="text-center">
+                        <p class="text-2xl font-bold">{{ posts.count }}</p>
+                        <p class="text-sm text-purple-100">Posts</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-2xl font-bold">{{ user.date_joined|timesince }}</p>
+                        <p class="text-sm text-purple-100">Member since</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col space-y-2">
+                <a href="{% url 'create_post' %}" class="bg-white text-purple-600 px-6 py-2 rounded-lg font-medium hover:bg-gray-100 transition duration-150 ease-in-out text-center">
+                    <i class="fas fa-plus mr-2"></i>New Post
+                </a>
+                <a href="{% url 'home' %}" class="border border-white text-white px-6 py-2 rounded-lg font-medium hover:bg-white hover:text-purple-600 transition duration-150 ease-in-out text-center">
+                    <i class="fas fa-home mr-2"></i>Home Feed
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Posts Section -->
+    <div class="bg-white rounded-lg shadow-md">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                <i class="fas fa-images mr-2 text-purple-600"></i>
+                My Posts
+            </h2>
+            <div class="flex items-center space-x-2 text-sm text-gray-500">
+                <span>{{ posts.count }} post{{ posts.count|pluralize }}</span>
+                <i class="fas fa-sort-amount-down"></i>
+                <span>Latest first</span>
+            </div>
+        </div>
+
+        {% if posts %}
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for post in posts %}
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+                            <!-- Media -->
+                            <div class="relative bg-gray-100 aspect-square">
+                                {% if post.image %}
+                                    <img src="{{ post.image.url }}" alt="Post image" class="w-full h-full object-cover">
+                                    <div class="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs">
+                                        <i class="fas fa-image"></i>
+                                    </div>
+                                {% elif post.video %}
+                                    <video class="w-full h-full object-cover" muted>
+                                        <source src="{{ post.video.url }}" type="video/mp4">
+                                    </video>
+                                    <div class="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs">
+                                        <i class="fas fa-video"></i>
+                                    </div>
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <div class="bg-black bg-opacity-50 rounded-full p-3">
+                                            <i class="fas fa-play text-white text-xl"></i>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="w-full h-full flex items-center justify-center">
+                                        <i class="fas fa-image text-4xl text-gray-300"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Content -->
+                            <div class="p-4">
+                                <!-- Date -->
+                                <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
+                                    <span class="flex items-center">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        {{ post.created_at|timesince }} ago
+                                    </span>
+                                    {% if post.updated_at != post.created_at %}
+                                        <span class="flex items-center text-orange-500">
+                                            <i class="fas fa-edit mr-1"></i> Edited
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Author -->
+                                <div class="mb-2 text-sm font-semibold text-gray-900">
+                                    {% if post.anonymous %}
+                                        <span class="italic text-gray-500">Anonymous</span>
+                                    {% else %}
+                                        {{ post.author.username }}
+                                    {% endif %}
+                                </div>
+
+                                <!-- Caption -->
+                                {% if post.caption %}
+                                    <p class="text-gray-800 text-sm mb-3 line-clamp-3">
+                                        {{ post.caption|truncatewords:15 }}
+                                    </p>
+                                {% else %}
+                                    <p class="text-gray-400 text-sm mb-3 italic">No caption</p>
+                                {% endif %}
+
+                                <!-- Actions -->
+                                <div class="flex items-center justify-between text-sm mb-4">
+                                    <!-- Like -->
+                                    <form action="{% url 'toggle_like' post.id %}" method="post" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="flex items-center space-x-1 text-red-500 hover:text-red-600">
+                                            {% if post.liked_by_user %}
+                                                <i class="fas fa-heart"></i>
+                                            {% else %}
+                                                <i class="far fa-heart"></i>
+                                            {% endif %}
+                                            <span>{{ post.total_likes }}</span>
+                                        </button>
+                                    </form>
+
+                                    <!-- Comment Count -->
+                                    <a href="#comments-{{ post.id }}" class="flex items-center space-x-1 text-blue-500 hover:text-blue-600">
+                                        <i class="far fa-comment"></i>
+                                        <span>{{ post.total_comments }}</span>
+                                    </a>
+
+                                    <!-- Share -->
+                                    <button type="button" class="flex items-center space-x-1 text-green-600 hover:text-green-700"
+                                        onclick="navigator.clipboard.writeText('{{ request.build_absolute_uri }}posts/{{ post.id }}/'); alert('Post link copied!');">
+                                        <i class="far fa-share-square"></i>
+                                        <span>Share</span>
+                                    </button>
+                                </div>
+
+                                <!-- Edit/Delete -->
+                                <div class="flex space-x-2">
+                                    <a href="{% url 'edit_post' post.id %}" class="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-center py-2 px-3 rounded-md text-sm font-medium">
+                                        <i class="fas fa-edit mr-1"></i>Edit
+                                    </a>
+                                    <a href="{% url 'delete_post' post.id %}" class="flex-1 bg-red-50 hover:bg-red-100 text-red-600 text-center py-2 px-3 rounded-md text-sm font-medium">
+                                        <i class="fas fa-trash mr-1"></i>Delete
+                                    </a>
+                                </div>
+
+                                <!-- Comments Section -->
+                                <div class="mt-4 border-t border-gray-100 pt-2" id="comments-{{ post.id }}">
+                                    {% for comment in post.comments.all %}
+                                        <div class="mb-2">
+                                            <p class="text-xs text-gray-500">
+                                                <strong>{{ comment.user.username }}</strong> • {{ comment.created_at|timesince }} ago
+                                            </p>
+                                            <p class="text-sm">{{ comment.text }}</p>
+                                        </div>
+                                    {% empty %}
+                                        <p class="text-gray-400 text-sm">No comments yet</p>
+                                    {% endfor %}
+
+                                    {% if user.is_authenticated %}
+                                        <form action="{% url 'add_comment' post.id %}" method="post" class="mt-3">
+                                            {% csrf_token %}
+                                            {{ comment_form.text }}
+                                            <button type="submit" class="mt-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded">
+                                                Add Comment
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% if posts.has_next %}
+                    <div class="text-center mt-8">
+                        <a href="?page={{ posts.next_page_number }}" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium inline-flex items-center">
+                            <i class="fas fa-plus mr-2"></i>Load More Posts
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="p-12 text-center">
+                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-camera text-4xl text-gray-300"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No posts yet</h3>
+                <p class="text-gray-500 mb-6 max-w-md mx-auto">
+                    You haven't created any posts yet. Share your first moment with the Gossiphy community!
+                </p>
+                <a href="{% url 'create_post' %}" class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 rounded-lg font-medium inline-flex items-center">
+                    <i class="fas fa-plus mr-2"></i>Create Your First Post
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.aspect-square {
+    aspect-ratio: 1 / 1;
+}
+</style>
+{% endblock %}

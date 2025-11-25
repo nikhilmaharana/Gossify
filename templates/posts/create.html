@@ -1,0 +1,196 @@
+<!-- templates/posts/create.html -->
+{% extends 'base.html' %}
+
+{% block title %}Create Post - Gossiphy{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+            <h1 class="text-2xl font-bold text-white flex items-center">
+                <i class="fas fa-plus-circle mr-3"></i>
+                Create New Post
+            </h1>
+            <p class="text-blue-100 mt-1">Share your moment with the community</p>
+        </div>
+
+        <!-- Form -->
+        <form method="post" enctype="multipart/form-data" class="p-6">
+            {% csrf_token %}
+            
+            <!-- User Info -->
+            <div class="flex items-center mb-6 pb-4 border-b border-gray-200">
+                <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                    {{ user.username|first|upper }}
+                </div>
+                <div class="ml-4">
+                    <h3 class="font-semibold text-gray-900">{{ user.username }}</h3>
+                    <p class="text-sm text-gray-500">Posting as {{ user.username }}</p>
+                </div>
+            </div>
+
+            <!-- Caption Field -->
+            <div class="mb-6">
+                <label for="id_caption" class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-edit mr-1 text-gray-400"></i>
+                    What's on your mind?
+                </label>
+                {{ form.caption }}
+                {% if form.caption.errors %}
+                    <div class="mt-2 text-sm text-red-600">
+                        {% for error in form.caption.errors %}
+                            <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <p class="mt-1 text-xs text-gray-500">
+                    <span id="caption-count">0</span>/2000 characters
+                </p>
+            </div>
+
+            <!-- Media Upload Section -->
+            <div class="space-y-4 mb-6">
+                <h3 class="text-sm font-medium text-gray-700 flex items-center">
+                    <i class="fas fa-camera mr-1 text-gray-400"></i>
+                    Add Media (at least one required)
+                </h3>
+                
+                <!-- Image Upload -->
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-400 transition-colors">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-image text-2xl text-gray-400"></i>
+                        <div class="flex-1">
+                            <label for="id_image" class="block text-sm font-medium text-gray-700 mb-1">
+                                Upload Image
+                            </label>
+                            {{ form.image }}
+                            {% if form.image.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.image.errors %}
+                                        <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <p class="text-xs text-gray-500 mt-1">
+                                JPG, PNG, GIF up to 5MB
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video Upload -->
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-purple-400 transition-colors">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-video text-2xl text-gray-400"></i>
+                        <div class="flex-1">
+                            <label for="id_video" class="block text-sm font-medium text-gray-700 mb-1">
+                                Upload Video
+                            </label>
+                            {{ form.video }}
+                            {% if form.video.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.video.errors %}
+                                        <p><i class="fas fa-exclamation-circle mr-1"></i>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <p class="text-xs text-gray-500 mt-1">
+                                MP4, MOV, AVI, MKV up to 25MB
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Non-field errors -->
+            {% if form.non_field_errors %}
+                <div class="bg-red-50 border border-red-200 rounded-md p-3 mb-6">
+                    {% for error in form.non_field_errors %}
+                        <p class="text-sm text-red-800">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>{{ error }}
+                        </p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="mb-6 flex items-center space-x-3">
+    <input type="checkbox" id="id_anonymous" name="anonymous"
+        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+        {% if form.anonymous.value %} checked {% endif %} />
+    <label for="id_anonymous" class="block text-sm text-gray-700 select-none">
+        Post anonymously
+    </label>
+</div>
+
+
+            <!-- Post Settings -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                <h3 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                    <i class="fas fa-cog mr-1 text-gray-400"></i>
+                    Post Settings
+                </h3>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <i class="fas fa-globe-americas text-blue-500 mr-2"></i>
+                        <span class="text-sm text-gray-600">This post will be visible to everyone</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-clock text-green-500 mr-2"></i>
+                        <span class="text-sm text-gray-600">Posted immediately</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row sm:justify-between space-y-3 sm:space-y-0 sm:space-x-4">
+                <a href="{% url 'home' %}" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white text-center py-3 px-6 rounded-lg font-medium transition duration-150 ease-in-out">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </a>
+                
+                <button type="submit" class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-3 px-6 rounded-lg font-medium transition duration-150 ease-in-out">
+                    <i class="fas fa-share mr-2"></i>Share Post
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Help Section -->
+    <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h3 class="text-sm font-medium text-blue-800 mb-2 flex items-center">
+            <i class="fas fa-info-circle mr-2"></i>
+            Posting Tips
+        </h3>
+        <ul class="text-sm text-blue-700 space-y-1">
+            <li>• Add a meaningful caption to engage your audience</li>
+            <li>• Use high-quality images and videos for better engagement</li>
+            <li>• Keep video files under 25MB for faster loading</li>
+            <li>• You can upload both an image and video in the same post</li>
+        </ul>
+    </div>
+</div>
+
+<!-- JavaScript for character count -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const captionField = document.getElementById('id_caption');
+    const captionCount = document.getElementById('caption-count');
+    
+    if (captionField && captionCount) {
+        function updateCount() {
+            const length = captionField.value.length;
+            captionCount.textContent = length;
+            
+            if (length > 1800) {
+                captionCount.classList.add('text-red-500');
+            } else {
+                captionCount.classList.remove('text-red-500');
+            }
+        }
+        
+        updateCount();
+        captionField.addEventListener('input', updateCount);
+    }
+});
+</script>
+{% endblock %}
